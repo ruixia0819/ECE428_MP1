@@ -1,4 +1,5 @@
 # ECE428_MP1
+
 ```
-Hello
+Group Member: ruixia2,li238
 ```
