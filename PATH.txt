@@ -1,0 +1,15 @@
+$ vim ~/.bash_profile
+
+# insert the following before "export PATH"/last line
+PATH=/usr/local/bin/anaconda3/bin:$PATH
+
+
+# so it looks like this:
+    PATH=$PATH:$HOME/.local/bin:$HOME/bin
+    PATH=/usr/local/bin/anaconda3/bin:$PATH
+    export PATH
+    
+# then exit ssh, and reconnect ssh
+# try conda, python
+
+# cheers
