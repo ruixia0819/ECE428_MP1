@@ -1,0 +1,36 @@
+1. X11 Forwarding
+
+sudo yum -y install openssh-server openssh-clients
+
+sudo vim /etc/ssh/sshd_config
+(X11Forwarding yes
+X11UseLocalhost no)
+
+sudo service sshd reload && sudo service sshd restart && service sshd status
+
+sudo yum -y install xauth
+
+2. Install Gedit/Gvim, and required package
+
+sudo yum -y install gedit && sudo yum -y install dconf dconf-editor && sudo yum install dbus-x11 && sudo yum install libcanberra-gtk*
+
+# reconnect ssh to open gedit
+
+sudo yum -y install vim-x11
+
+
+
+
+//------------------------ Not Necessary Anymore Below ----------------------------
+sudo yum -y install firefox 
+
+3. Anaconda
+
+[VM10] scp ~/.profile li238@sp17-cs425-g07-09.cs.illinois.edu:~/
+[VM10] scp ~/Anaconda3-4.3.0-Linux-x86_64.sh li238@sp17-cs425-g07-09.cs.illinois.edu:~/
+
+sudo bash ~/Ana*
+(/usr/local/bin/anaconda3)
+
+.bash_profile: insert before "export PATH"
+PATH=/usr/local/bin/anaconda3/bin:$PATH
