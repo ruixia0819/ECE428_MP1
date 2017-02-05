@@ -18,7 +18,7 @@ class Node1():
         s.connect((host, port)) # connect to Node2
         name = CONNECTION_LIST[host]
         s.send(name + ":" + cmd)  # send message to sever
-        print s.recv(1024) # print received messages
+        # print s.recv(1024) # print received messages
         s.close()
 
 
