@@ -9,14 +9,14 @@ class Node1():
 
     def wait_input(self):
         while True:
-            cmd = raw_input(" ")
+            cmd = raw_input("")
             self.broadcast_data(cmd)
 
     def client(self, host,port,cmd):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #while True:
         s.connect((host, port)) # connect to Node2
-        name = CONNECTION_LIST[host]
+        name = CONNECTION_LIST[socket.gethostname()] # find current machine name
         s.send(name + ":" + cmd)  # send message to sever
         # print s.recv(1024) # print received messages
         s.close()
@@ -61,18 +61,18 @@ class Node1():
 
 
 if __name__ == "__main__":
-    host=socket.gethostbyname(socket.gethostname())
-    node1 = Node1(host, 9999)
-    CONNECTION_LIST = {'sp17-cs425-g07-01.cs.illinois.edu':"VM01",
-                       'sp17-cs425-g07-02.cs.illinois.edu':"VM02",
-                       'sp17-cs425-g07-03.cs.illinois.edu':"VM03",
-                       'sp17-cs425-g07-04.cs.illinois.edu':"VM04",
-                       'sp17-cs425-g07-05.cs.illinois.edu':"VM05"
-                       }
+	print "Chatroom Started ..."
+	host=socket.gethostbyname(socket.gethostname())
+	node1 = Node1(host, 9999)
+	CONNECTION_LIST = {'sp17-cs425-g07-01.cs.illinois.edu':"VM01",
+					   'sp17-cs425-g07-02.cs.illinois.edu':"VM02",
+					   'sp17-cs425-g07-03.cs.illinois.edu':"VM03",
+					   'sp17-cs425-g07-04.cs.illinois.edu':"VM04",
+					   'sp17-cs425-g07-05.cs.illinois.edu':"VM05"
+					   }
+	t1 = threading.Thread(target=node1.wait_input)
+	t2 = threading.Thread(target=node1.server)
 
-    t1 = threading.Thread(target=node1.wait_input)
-    t2 = threading.Thread(target=node1.server)
-
-    t2.start()
-    t1.start()
+	t2.start()
+	t1.start()
 
