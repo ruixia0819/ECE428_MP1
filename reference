@@ -1,5 +1,8 @@
 1. Keyless SSH
 http://web.archive.org/web/20160404025901/http://jaybyjayfresh.com/2009/02/04/logging-in-without-a-password-certificates-ssh/
 
+# how to copy public key to other servers
+cat ~/.ssh/id_rsa.pub | ssh USER@HOST "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+
 2. Tutorial 
 https://gist.github.com/kevinkindom/108ffd675cb9253f8f71
