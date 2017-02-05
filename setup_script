@@ -12,11 +12,12 @@ sudo yum -y install xauth
 
 2. Install Gedit/Gvim, and required package
 
-sudo yum -y install gedit && sudo yum -y install dconf dconf-editor && sudo yum install dbus-x11 && sudo yum install libcanberra-gtk*
+sudo yum -y install gedit && sudo yum -y install dconf dconf-editor && sudo yum -y install dbus-x11 && sudo yum -y install libcanberra-gtk*
 
-# reconnect ssh to open gedit
+sudo yum -y install gvim
 
-sudo yum -y install vim-x11
+# reconnect ssh to open gedit & gvim
+
 
 
 
