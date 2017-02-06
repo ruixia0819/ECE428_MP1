@@ -5,13 +5,17 @@ class Node1():
         self.host = host
         self.port = port
 
+
     def wait_input(self):
         while True:
             cmd = raw_input("")
-            self.broadcast_data(cmd)
+
             if cmd=='q':
+                self.client(socket.gethostname(),self.port, cmd)
                 print "wait_input exited"
                 return -1
+
+            self.broadcast_data(cmd)
 
 
     def client(self, host,port,cmd):
@@ -40,7 +44,6 @@ class Node1():
                     return -1
                 # conn.send("server received you message.")
                 print data
-
             conn.close()
 
 
