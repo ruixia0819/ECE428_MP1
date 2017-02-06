@@ -13,6 +13,7 @@ class Node1():
             if cmd=='q':
                 self.client(socket.gethostname(),self.port, cmd)
                 print "wait_input exited"
+                CONNECTION_LIST.pop(socket.gethostname())
                 return -1
 
             self.broadcast_data(cmd)
