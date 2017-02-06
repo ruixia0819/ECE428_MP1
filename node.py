@@ -11,9 +11,8 @@ class Node1():
             cmd = raw_input("")
 
             if cmd=='q':
-                self.client(socket.gethostname(),self.port, cmd)
+                self.broadcast_data(socket.gethostname()+":"+"dead")
                 print "wait_input exited"
-                CONNECTION_LIST.pop(socket.gethostname())
                 return -1
 
             self.broadcast_data(cmd)
@@ -40,9 +39,12 @@ class Node1():
                 data = conn.recv(1024)
                 if not data:
                     break
-                if data.split(":")[1] == 'q':
-                    print "server exited"
-                    return -1
+
+                if data.split(":")[2] == 'dead':
+                    CONNECTION_LIST.pop(data.split(":")[1])
+                    if data.split(":")[1] == socket.gethostname():
+                        print "server exited"
+                        return -1
                 # conn.send("server received you message.")
                 print data
             conn.close()
@@ -73,10 +75,10 @@ if __name__ == "__main__":
 	host=socket.gethostbyname(socket.gethostname())
 	node1 = Node1(host, 9999)
 	CONNECTION_LIST = {'sp17-cs425-g07-01.cs.illinois.edu':"VM01",
-					   'sp17-cs425-g07-02.cs.illinois.edu':"VM02"
-					   #'sp17-cs425-g07-03.cs.illinois.edu':"VM03",
-					   #'sp17-cs425-g07-04.cs.illinois.edu':"VM04",
-					   #'sp17-cs425-g07-05.cs.illinois.edu':"VM05"
+					   'sp17-cs425-g07-02.cs.illinois.edu':"VM02",
+					   'sp17-cs425-g07-03.cs.illinois.edu':"VM03",
+					   'sp17-cs425-g07-04.cs.illinois.edu':"VM04",
+					   'sp17-cs425-g07-05.cs.illinois.edu':"VM05",
 					   }
 	t1 = threading.Thread(target=node1.wait_input)
 	t2 = threading.Thread(target=node1.server)
