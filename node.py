@@ -28,12 +28,12 @@ class Node1():
             print host + "Not Online"
             s.close()
 
+
         try:
-            s.send(name + ":" + cmd)  # send message to sever
-        except:
-            print host+"Send Wrong"
-            s.close()
-        s.close()
+	    s.send(name + ":" + cmd)  # send message to sever
+	except:   
+	    s.close()
+	s.close()
 
 
     def server(self):
@@ -49,7 +49,8 @@ class Node1():
                 if not data:
                     break
 
-                if data.split(":")[1] == 'dead':
+                if data.split(":")[1] == 'Dead':
+
                     if data.split(":")[2] == socket.gethostname():
                         print "server exited"
                         return -1
