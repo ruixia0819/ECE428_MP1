@@ -5,13 +5,16 @@ class Node1():
         self.host = host
         self.port = port
 
+
     def wait_input(self):
-	while True:
+        while True:
             cmd = raw_input("")
-            self.broadcast_data(cmd)
             if cmd=='q':
+                self.broadcast_data("Dead"+":"+socket.gethostname())
                 print "wait_input exited"
                 return -1
+
+            self.broadcast_data(cmd)
 
 
     def client(self, host,port,cmd):
@@ -19,9 +22,12 @@ class Node1():
         #while True:
         s.connect((host, port)) # connect to Node2
         name = CONNECTION_LIST[socket.gethostname()] # find current machine name
-        s.send(name + ":" + cmd)  # send message to sever
-        # print s.recv(1024) # print received messages
-        s.close()
+        try:
+            s.send(name + ":" + cmd)  # send message to sever
+        except:
+            print host+"Not Online"
+            s.close()
+        s.cloes()
 
 
     def server(self):
@@ -31,30 +37,32 @@ class Node1():
         while True:
             conn, addr = ss.accept()
             # print 'Connected by ', addr
-	    while True:
-		data = conn.recv(1024)
+            #CONNECTION_LIST[addr]="";
+            while True:
+                data = conn.recv(1024)
                 if not data:
                     break
-				if data.split(":")[1] == 'q'
-					print "server exited"
-					return -1
-				# conn.send("server received you message.")
-				print data
 
+                if data.split(":")[1] == 'dead':
+                    if data.split(":")[2] == socket.gethostname():
+                        print "server exited"
+                        return -1
+
+                    CONNECTION_LIST.pop(data.split(":")[2])
+                    
+                # conn.send("server received you message.")
+                print data
             conn.close()
 
 
     def broadcast_data(self,cmd):
         # Do not send the message to master socket and the client who has send us the message
         # for socket in CONNECTION_LIST:
-        #     try:
-        #         socket.send(message)
-        #     except:
+
         for key,value in  CONNECTION_LIST.iteritems():
-            self.client(key,self.port,cmd)
+                self.client(key,self.port,cmd)
         # socket.close()
         # CONNECTION_LIST.remove(socket)
-
 
                             # def tcplink(self, sock, addr):
     #     while True:
@@ -65,18 +73,22 @@ class Node1():
 
 
 if __name__ == "__main__":
-	print "Chatroom Started ..."
-	host=socket.gethostbyname(socket.gethostname())
-	node1 = Node1(host, 9999)
-	CONNECTION_LIST = {'sp17-cs425-g07-01.cs.illinois.edu':"VM01",
-					   'sp17-cs425-g07-02.cs.illinois.edu':"VM02"
-					   #'sp17-cs425-g07-03.cs.illinois.edu':"VM03",
-					   #'sp17-cs425-g07-04.cs.illinois.edu':"VM04",
-					   #'sp17-cs425-g07-05.cs.illinois.edu':"VM05"
-					   }
-	t1 = threading.Thread(target=node1.wait_input)
-	t2 = threading.Thread(target=node1.server)
+    print "Chatroom Started ..."
+    host=socket.gethostbyname(socket.gethostname())
+    node1 = Node1(host, 9999)
 
-	t2.start()
-	t1.start()
+    CONNECTION_LIST = {'sp17-cs425-g07-01.cs.illinois.edu':"VM01",
+                       'sp17-cs425-g07-02.cs.illinois.edu':"VM02",
+                       'sp17-cs425-g07-03.cs.illinois.edu':"VM03",
+                       'sp17-cs425-g07-04.cs.illinois.edu':"VM04",
+                       'sp17-cs425-g07-05.cs.illinois.edu':"VM05",
+                       }
+
+
+
+    t1 = threading.Thread(target=node1.wait_input)
+    t2 = threading.Thread(target=node1.server)
+
+    t2.start()
+    t1.start()
 
