@@ -6,12 +6,12 @@ class Node1():
         self.port = port
 
     def wait_input(self):
-		while True:
-			cmd = raw_input("")
-			self.broadcast_data(cmd)
-			if cmd=='q':
-				print "wait_input exited"
-				return -1
+        while True:
+            cmd = raw_input("")
+            self.broadcast_data(cmd)
+            if cmd=='q':
+                print "wait_input exited"
+                return -1
 
 
     def client(self, host,port,cmd):
@@ -31,15 +31,15 @@ class Node1():
         while True:
             conn, addr = ss.accept()
             # print 'Connected by ', addr
-			while True:
-				data = conn.recv(1024)
+            while True:
+                data = conn.recv(1024)
                 if not data:
                     break
-				if data.split(":")[1] == 'q'
-					print "server exited"
-					return -1
-				# conn.send("server received you message.")
-				print data
+                if data.split(":")[1] == 'q':
+                    print "server exited"
+                    return -1
+                # conn.send("server received you message.")
+                print data
 
             conn.close()
 
