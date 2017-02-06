@@ -42,10 +42,12 @@ class Node1():
                     break
 
                 if data.split(":")[1] == 'dead':
-                    CONNECTION_LIST.pop(data.split(":")[2])
                     if data.split(":")[2] == socket.gethostname():
                         print "server exited"
                         return -1
+
+                    CONNECTION_LIST.pop(data.split(":")[2])
+                    
                 # conn.send("server received you message.")
                 print data
             conn.close()
