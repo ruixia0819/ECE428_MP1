@@ -5,14 +5,14 @@ class Node1():
         self.host = host
         self.port = port
 
-
-
     def wait_input(self):
-        while True:
-            cmd = raw_input("")
-            if cmd=='q':
-                sys.exit(1)
-            self.broadcast_data(cmd)
+		while True:
+			cmd = raw_input("")
+			self.broadcast_data(cmd)
+			if cmd=='q':
+				print "wait_input exited"
+				return -1
+
 
     def client(self, host,port,cmd):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,13 +31,15 @@ class Node1():
         while True:
             conn, addr = ss.accept()
             # print 'Connected by ', addr
-
-            while True:
-                data = conn.recv(1024)
+			while True:
+				data = conn.recv(1024)
                 if not data:
                     break
-                # conn.send("server received you message.")
-                print data
+				if data.split(":")[1] == 'q'
+					print "server exited"
+					return -1
+				# conn.send("server received you message.")
+				print data
 
             conn.close()
 
@@ -67,10 +69,10 @@ if __name__ == "__main__":
 	host=socket.gethostbyname(socket.gethostname())
 	node1 = Node1(host, 9999)
 	CONNECTION_LIST = {'sp17-cs425-g07-01.cs.illinois.edu':"VM01",
-					   'sp17-cs425-g07-02.cs.illinois.edu':"VM02",
-					   'sp17-cs425-g07-03.cs.illinois.edu':"VM03",
-					   'sp17-cs425-g07-04.cs.illinois.edu':"VM04",
-					   'sp17-cs425-g07-05.cs.illinois.edu':"VM05"
+					   'sp17-cs425-g07-02.cs.illinois.edu':"VM02"
+					   #'sp17-cs425-g07-03.cs.illinois.edu':"VM03",
+					   #'sp17-cs425-g07-04.cs.illinois.edu':"VM04",
+					   #'sp17-cs425-g07-05.cs.illinois.edu':"VM05"
 					   }
 	t1 = threading.Thread(target=node1.wait_input)
 	t2 = threading.Thread(target=node1.server)
