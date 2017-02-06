@@ -1,4 +1,4 @@
-import socket, threading
+import socket, threading,sys
 
 class Node1():
     def __init__(self, host, port):
@@ -10,6 +10,8 @@ class Node1():
     def wait_input(self):
         while True:
             cmd = raw_input("")
+            if cmd=='q':
+                sys.exit(1)
             self.broadcast_data(cmd)
 
     def client(self, host,port,cmd):
