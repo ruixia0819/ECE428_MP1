@@ -10,8 +10,9 @@ class Node1():
         while True:
             cmd = raw_input("")
 
+
             if cmd=='q':
-                self.broadcast_data(socket.gethostname()+":"+"dead")
+                self.broadcast_data("dead"+":"+socket.gethostname())
                 print "wait_input exited"
                 return -1
 
@@ -40,9 +41,9 @@ class Node1():
                 if not data:
                     break
 
-                if data.split(":")[2] == 'dead':
-                    CONNECTION_LIST.pop(data.split(":")[1])
-                    if data.split(":")[1] == socket.gethostname():
+                if data.split(":")[1] == 'dead':
+                    CONNECTION_LIST.pop(data.split(":")[2])
+                    if data.split(":")[2] == socket.gethostname():
                         print "server exited"
                         return -1
                 # conn.send("server received you message.")
