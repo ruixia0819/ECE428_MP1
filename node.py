@@ -13,7 +13,6 @@ class Node1():
                 self.broadcast_data("Dead"+":"+socket.gethostname())
                 print "wait_input exited"
                 return -1
-
             self.broadcast_data(cmd)
 
 
@@ -22,18 +21,24 @@ class Node1():
         #while True:
         name = CONNECTION_LIST[socket.gethostname()]  # find current machine name
 
-        try:
-            s.connect((host, port)) # connect to Node2
-        except:
-            print host + "Not Online"
-            s.close()
 
-        try:
-            s.send(name + ":" + cmd)  # send message to sever
-        except:
-            print host+"Send Wrong"
-            s.close()
+        s.connect((host, port)) # connect to Node2
+        s.send(name + ":" + cmd)  # send message to sever
         s.close()
+
+
+        # try:
+        #     s.connect((host, port)) # connect to Node2
+        # except:
+        #     print host + "Not Online"
+        #     s.close()
+        #
+        # try:
+        #     s.send(name + ":" + cmd)  # send message to sever
+        # except:
+        #     print host+"Send Wrong"
+        #     s.close()
+        # s.close()
 
 
     def server(self):
