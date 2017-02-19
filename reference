@@ -6,3 +6,6 @@ cat ~/.ssh/id_rsa.pub | ssh USER@HOST "mkdir -p ~/.ssh && cat >> ~/.ssh/authoriz
 
 2. Tutorial 
 https://gist.github.com/kevinkindom/108ffd675cb9253f8f71
+
+3. #10 -ping-> #01
+rtt min/avg/max/mdev = 0.108/0.131/0.190/0.017 ms
