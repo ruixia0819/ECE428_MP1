@@ -17,3 +17,5 @@ rtt min/avg/max/mdev = 0.117/0.176/1.530/0.178 ms
 
 #03 -ping-> #08
 rtt min/avg/max/mdev = 0.094/0.151/1.529/0.180 ms
+
+TA：Max Delay= 200-500 ms; T = 2 times Max Delay
