@@ -23,39 +23,13 @@ class Node(object):
         while True:
             cmd = raw_input("")
             if cmd == 'q':
-                self.basic_multicast("Dead" + ":" + socket.gethostname())
+                #self.basic_multicast("Dead" + ":" + socket.gethostname())
                 print "wait_input exited"
                 thread.interrupt_main()
 
             self.basic_multicast(cmd)
 
-    def multicast_0(self,  host_name):  # method for multi-cast given msg
-        # uni-cast the msg to every node in this group
-        for key, value in CONNECTION_LIST.iteritems():
-            if (host_name != key):
-                self.client_0(key, self.port_failure)  # pack the msg as a client socket to send
 
-
-    def client_0(self, host, port):  # method for client socket
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        name = CONNECTION_LIST[socket.gethostname()]  # find current machine name
-
-        try:
-            s.connect((host, port))  # connect to server
-        except:
-            # print host + ": Not Online" #debug
-            s.close()
-            return -1
-
-        try:
-            s.sendall(host)  # send message to sever
-        except:
-            s.close()
-            return -1
-
-        s.close()
-        return 0
 
 
     def basic_multicast(self,cmd):
@@ -105,9 +79,37 @@ class Node(object):
                         CONNECTION_LIST.pop(data.split(":")[2])
 
                 # conn.send("server received you message.")
-                print data
+                print data #delivered
 
             conn.close()  # close client socket
+
+
+#----------------------------------Failure Detection----------------------------------------
+    def multicast_0(self,  host_name):  # method for multi-cast given msg
+        # uni-cast the msg to every node in this group
+        for key, value in CONNECTION_LIST.iteritems():
+            if (host_name != key):
+                self.client_0(key, self.port_failure)  # pack the msg as a client socket to send
+
+
+    def client_0(self, host, port):  # method for client socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect((host, port))  # connect to server
+        except:
+            # print host + ": Not Online" #debug
+            s.close()
+            return -1
+
+        try:
+            s.sendall(host)  # send message to sever
+        except:
+            s.close()
+            return -1
+
+        s.close()
+        return 0
+
 
     def heartbeating(self): # multicast heartbeat
         if(round(time.time()*1000,0)%self.period==0):
@@ -116,52 +118,53 @@ class Node(object):
 
 
     def detector(self): # receive, check, Multicast Failure
-
         ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ss.bind((self.host, self.port_failure))
-        ss.listen(5)
+        ss.listen(10)
 
         while True:
             conn, addr = ss.accept()
-            # print 'Connected by ', addr
-
 
             while True:
-                data = conn.recv(1024)
-
-                if not data:  # recv ending msg from client
+                hbaddr = conn.recv(1024)
+                if not addr:  # recv ending msg from client
                     break
 
-                flag[data]=1
-
-                # conn.send("server received you message.")
+                timestamp[hbaddr] = time.time()
+                thread[hbaddr] = threading.Thread(target=self.Timer, args=(hbaddr))
+                thread[hbaddr].start
 
             conn.close()  # close client socket
 
-            if (round(time.time() * 1000, 0) % self.period == 0):
-                initial=time.time()*1000
-                for key in flag:
-                    flag[key]=0
 
 
-            if(time.time()*1000==initial+(self.period/2)):
-                # check flag
-                for key in flag:
-                    if(flag[key]==0):
-                        self.basic_multicast(CONNECTION_LIST[key]+" failed")
-                        flag.pop(key)
+    def Timer(self, host):
+        while True:
+            if(time.time()>timestamp[host]+1.5*self.period):
+                print(host+"failed")
+                #broadcast
+                return -1
 
 
 
 
 
+
+
+
+
+# --------------------------------Total Ordering--------------------------------------------
+
+
+
+#----------------------------------Main Method----------------------------------------------
 
 if __name__ == "__main__":
     print "ChatRoom Started ..."
 
 
     host = socket.gethostbyname(socket.gethostname())  # get host machine IP address
-    node = Node(host, 9999,8888, 1000)  # create node object containing both client and server; def __init__(self, host, port,port_failure,period):
+    node = Node(host, 9999, 8888, 2000)  # create node object containing both client and server; def __init__(self, host, port,port_failure,period):
 
     # global dictionary
     CONNECTION_LIST = {'sp17-cs425-g07-01.cs.illinois.edu': "VM01",
@@ -170,12 +173,8 @@ if __name__ == "__main__":
                        'sp17-cs425-g07-04.cs.illinois.edu': "VM04",
                        'sp17-cs425-g07-05.cs.illinois.edu': "VM05"}
 
-    flag={'sp17-cs425-g07-01.cs.illinois.edu': 0,
-          'sp17-cs425-g07-02.cs.illinois.edu': 0,
-          'sp17-cs425-g07-03.cs.illinois.edu': 0,
-          'sp17-cs425-g07-04.cs.illinois.edu': 0,
-          'sp17-cs425-g07-05.cs.illinois.edu': 0
-          }
+    timestamp={}
+    initial = {}
 
     t1 = threading.Thread(target=node.wait_input)  # thread for client (send msg)
     t2 = threading.Thread(target=node.server)  # thread for server (recv msg)
@@ -191,6 +190,7 @@ if __name__ == "__main__":
     t1.start()
     t3.start()
     t4.start()
+
 
 
     print(t1.isDaemon())
