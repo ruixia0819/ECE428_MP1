@@ -137,7 +137,7 @@ class Node(object):
         while True:
             time.sleep((self.period/1000)/5)
             if(time.time()*1000 > timestamp[host] + 2*self.period):
-                CONNECTION_LIST.pop(host)
+                #CONNECTION_LIST.pop(host)
                 print(host+" failed")
                 #broadcast
                 return -1
