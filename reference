@@ -25,3 +25,6 @@ TA：Max Delay= 200-500 ms; T = 2 times Max Delay
 Each node have 7 timer thread to detect the failure
 We found it is slow because each thread check the time very frequently.
 How to solve: delay check time 
+
+5. ISIS Pseudo Code
+http://studylib.net/doc/7830646/isis-algorithm-for-total-ordering-of-messages
