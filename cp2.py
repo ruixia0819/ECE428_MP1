@@ -22,8 +22,8 @@ class Node(object):
         while True:
             cmd = raw_input("")
             if cmd == 'q':
-                #self.basic_multicast("Dead" + ":" + socket.gethostname())
-                print "wait_input exited"
+                # self.basic_multicast("Left" + ":" + socket.gethostname())
+                print "I am leaving"
                 thread.interrupt_main()
 
             self.basic_multicast(cmd)
@@ -65,19 +65,18 @@ class Node(object):
                 if not data:  # recv ending msg from client
                     break
 
-                if data.split(":")[1] == ' Dead':
-                    if data.split(":")[2] == socket.gethostname():  # self-dead
-                        print "server exited"
-                        conn.close()
-                        ss.close()
-                        return -1
-                    else:  # other dead
-                        CONNECTION_LIST.pop(data.split(":")[2])
-
+                # if data.split(":")[1] == ' Dead':
+                #     if data.split(":")[2] == socket.gethostname():  # self-dead
+                #         print "server exited"
+                #         conn.close()
+                #         ss.close()
+                #         return -1
                 # conn.send("server received you message.")
+
                 print data #delivered
 
             conn.close()  # close client socket
+
 
 #----------------------------------Failure Detection----------------------------------------
     def multicast_0(self):  # method for multi-cast given msg
@@ -87,9 +86,7 @@ class Node(object):
             if (socket.gethostname() != key):
                 self.client_0(key, self.port_failure)  # pack the msg as a client socket to send
 
-
     def client_0(self, host, port):  # method for client socket
-        #print "Clinet Hb Entered"
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.connect((host, port))  # connect to server
@@ -109,27 +106,23 @@ class Node(object):
         return 0
 
     def heartbeating(self): # multicast heartbeat
-        #print "entered heartbeating"
         prev_time = time.time()*1000
         while True:
-            time.sleep((self.period/1000)/5)
+            time.sleep((self.period/1000)/5) #delay for checking
             cur_time = time.time()*1000
-            if(cur_time-prev_time>self.period):
-                #print "Hb Period Entered"
+            if(cur_time-prev_time>self.period): #send heartbeating evry period
                 prev_time = cur_time
                 self.multicast_0()
 
     def detector(self): # receive, check, Multicast Failure
-        #print "entered detector"
+
         ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ss.bind((self.host, self.port_failure))
         ss.listen(10)
-
         while True:
             conn, addr = ss.accept()
             while True:
                 hbaddr = conn.recv(1024)
-                #print "recv Hb from " + hbaddr # debug
                 if not hbaddr:  # recv ending msg from client
                     break
 
@@ -142,9 +135,9 @@ class Node(object):
 
     def Timer(self, host):
         while True:
-            # Wait for 300 milliseconds
             time.sleep((self.period/1000)/5)
             if(time.time()*1000 > timestamp[host] + 2*self.period):
+                CONNECTION_LIST.pop(host)
                 print(host+" failed")
                 #broadcast
                 return -1
@@ -174,8 +167,8 @@ if __name__ == "__main__":
 
     t1 = threading.Thread(target=node.wait_input)  # thread for client (send msg)
     t2 = threading.Thread(target=node.server)  # thread for server (recv msg)
-    t3 = threading.Thread(target=node.heartbeating)
-    t4 = threading.Thread(target=node.detector)
+    t3 = threading.Thread(target=node.heartbeating) # thread for sending heartbeating
+    t4 = threading.Thread(target=node.detector) # thread for detector of heartbeating(receive heartbeat, detect failure)
 
     t1.daemon=True
     t2.daemon=True
@@ -193,6 +186,4 @@ if __name__ == "__main__":
 
 
 
-    # threads terminate when target function returns
-    # main thread terminate normally
 
