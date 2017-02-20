@@ -7,7 +7,8 @@ cat ~/.ssh/id_rsa.pub | ssh USER@HOST "mkdir -p ~/.ssh && cat >> ~/.ssh/authoriz
 2. Tutorial 
 https://gist.github.com/kevinkindom/108ffd675cb9253f8f71
 
-3. TA: T = 200ms ~ 10s; 5~10x RTT
+3.Max Delay
+TA: T = 200ms ~ 10s; 5~10x RTT
 
 #10 -ping-> #01
 rtt min/avg/max/mdev = 0.108/0.131/0.190/0.017 ms
@@ -19,3 +20,8 @@ rtt min/avg/max/mdev = 0.117/0.176/1.530/0.178 ms
 rtt min/avg/max/mdev = 0.094/0.151/1.529/0.180 ms
 
 TA：Max Delay= 200-500 ms; T = 2 times Max Delay
+
+4. Timer Thread: 
+Each node have 7 timer thread to detect the failure
+We found it is slow because each thread check the time very frequently.
+How to solve: delay check time 
