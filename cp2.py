@@ -17,7 +17,7 @@ class Node(object):
         self.port = port
         self.period= period
         self.port_failure=port_failure
-
+        self.pro_p=0# proposed priority
 
     def wait_input(self):  # method for take input msg
         while True:
@@ -97,7 +97,7 @@ class Node(object):
                     # update agreed priority
                     queue[idx][1]=True
                     queue[idx][0]=float(data.split(":")[2])
-                    pro_p=float(data.split(":")[2])
+                    self.pro_p=float(data.split(":")[2])
 
                     # reorder
                     queue.sort(key=lambda elem:elem[0])
@@ -109,10 +109,10 @@ class Node(object):
 
 
                 else: #received normal message
-                    pro_p = pro_p + 1
+                    self.pro_p = self.pro_p + 1
 
                     str=CONNECTION_LIST[socket.gethostname()]
-                    p=float(str[-1])/10 +pro_p
+                    p=float(str[-1])/10 +self.pro_p
 
                     queue.append([p,False,data])
 
@@ -127,7 +127,7 @@ class Node(object):
             conn.close()  # close client socket
 
 
-#-------------------------------------Failure Detection------------------------------------------
+#--------------------------------------Failure Detection-------------------------------------------
 
     def multicast_0(self):  # method for multi-cast given msg
         #print "Multicast Hb Entered"
@@ -219,7 +219,7 @@ if __name__ == "__main__":
 
 
     # global queue and priority for ISIS
-    pro_p=0 # proposed priority
+
     AGR_P={} #agreed priority
     REC_PRO_COUNTER={}
     # flag_deliverable=False
