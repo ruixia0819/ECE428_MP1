@@ -32,7 +32,6 @@ class Node(object):
             self.basic_multicast(cmd)
 
 
-
     def basic_multicast(self,cmd):
         for key, value in CONNECTION_LIST.iteritems():
             self.client(key, self.port, cmd)  # pack the msg as a client socket to send
@@ -111,9 +110,9 @@ class Node(object):
                 else: #received normal message
                     self.pro_p = self.pro_p + 1
 
-                    str=CONNECTION_LIST[socket.gethostname()]
+                    name=CONNECTION_LIST[socket.gethostname()]
 
-                    p=float(str[-1])/10 +self.pro_p
+                    p=float(name[-1])/10 +self.pro_p
                     queue.append([p,False,data])
 
                     #send propsed priority
