@@ -28,6 +28,7 @@ class Node(object):
                 thread.interrupt_main()
 
             REC_PRO_COUNTER[cmd] =len(CONNECTION_LIST)-1
+            AGR_P[cmd]=0
             self.basic_multicast(cmd)
 
 
@@ -79,11 +80,11 @@ class Node(object):
                 if data.split(":")[1]=="0": #received proposed priority
                     REC_PRO_COUNTER[data.split(":")[-1]] = REC_PRO_COUNTER[data.split(":")[-1]] - 1
 
-                    if float(data.split(":")[2])> agr_p:
-                        agr_p= float(data.split(":")[2])
+                    if float(data.split(":")[2])> AGR_P[data.split(":")[-1]]:
+                        AGR_P[data.split(":")[-1]]= float(data.split(":")[2])
 
                     if REC_PRO_COUNTER[data.split(":")[-1]]==0:
-                        broadcast_agr_p= threading.Thread(target=self.basic_multicast, args=("1"+":"+str(agr_p)+":"+data.split(":")[-2]+data.split(":")[-1]))
+                        broadcast_agr_p= threading.Thread(target=self.basic_multicast, args=("1"+":"+str(AGR_P[data.split(":")[-1]])+":"+data.split(":")[-2]+data.split(":")[-1]))
                                                                                         #self.name : 1 : agr_p : receive_name : message
                         broadcast_agr_p.start()
 
@@ -120,7 +121,7 @@ class Node(object):
                     send_pro_p.start()
 
 
-               
+
 
             conn.close()  # close client socket
 
@@ -213,7 +214,7 @@ if __name__ == "__main__":
 
     # global queue and priority for ISIS
     pro_p=0 # proposed priority
-    agr_p=0 #agreeed priority
+    AGR_P={} #agreeed priority
     REC_PRO_COUNTER={}
     # flag_deliverable=False
     queue=[]
