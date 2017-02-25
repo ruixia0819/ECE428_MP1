@@ -18,6 +18,7 @@ class Node(object):
         self.period= period
         self.port_failure=port_failure
 
+
     def wait_input(self):  # method for take input msg
         while True:
             cmd = raw_input("")
@@ -26,11 +27,15 @@ class Node(object):
                 print "I am leaving"
                 thread.interrupt_main()
 
+            REC_PRO_COUNTER[cmd] =len(CONNECTION_LIST)-1
             self.basic_multicast(cmd)
+
+
 
     def basic_multicast(self,cmd):
         for key, value in CONNECTION_LIST.iteritems():
             self.client(key, self.port, cmd)  # pack the msg as a client socket to send
+
 
     def client(self, host, port, cmd):  # method for client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -53,6 +58,10 @@ class Node(object):
         s.close()
         return 0
 
+
+
+
+
     def server(self):
         ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ss.bind((self.host, self.port))
@@ -60,25 +69,65 @@ class Node(object):
         while True:
             conn, addr = ss.accept()
             # print 'Connected by ', addr
+
+
             while True:
                 data = conn.recv(1024)
                 if not data:  # recv ending msg from client
                     break
 
-                # if data.split(":")[1] == ' Dead':
-                #     if data.split(":")[2] == socket.gethostname():  # self-dead
-                #         print "server exited"
-                #         conn.close()
-                #         ss.close()
-                #         return -1
-                # conn.send("server received you message.")
+                if data.split(":")[1]=="0": #received proposed priority
+                    REC_PRO_COUNTER[data.split(":")[-1]] = REC_PRO_COUNTER[data.split(":")[-1]] - 1
 
-                print data #delivered
+                    if float(data.split(":")[2])> agr_p:
+                        agr_p= float(data.split(":")[2])
+
+                    if REC_PRO_COUNTER[data.split(":")[-1]]==0:
+                        broadcast_agr_p= threading.Thread(target=self.basic_multicast, args=("1"+":"+str(agr_p)+":"+data.split(":")[-2]+data.split(":")[-1]))
+                                                                                        #self.name : 1 : agr_p : receive_name : message
+                        broadcast_agr_p.start()
+
+
+                elif data.split(":")[1]=="1": #received agreed priority
+                    #search agreed message
+                    idx=[elem[2] for elem in queue].index(data.split(":")[-2]+":"+data.split(":")[-1])
+
+                    # update agreed priority
+                    queue[idx][1]=True
+                    queue[idx][0]=float(data.split(":")[2])
+                    pro_p=agr_p
+
+                    # reorder
+                    queue.sort(key=lambda elem:elem[0])
+
+
+                    # deliver
+                    while(queue[0][1]==True):
+                        print (queue.pop(0)[2])
+
+
+                else: #received normal message
+                    pro_p = pro_p + 1
+
+                    str=CONNECTION_LIST[socket.gethostname()]
+                    p=float(str[-1])/10 +pro_p
+
+                    queue.append([p,False,data])
+
+                     #send propsed priority
+                    send_pro_p = threading.Thread(target=self.client,args=("0" + ":" + str(p) + ":" + data),)
+                                                                     #self.name : 0 : prop_p : receive_name : message
+                    send_pro_p.start()
+
+
+               
 
             conn.close()  # close client socket
 
 
 #----------------------------------Failure Detection----------------------------------------
+
+
     def multicast_0(self):  # method for multi-cast given msg
         #print "Multicast Hb Entered"
         # uni-cast the msg to every node in this group
@@ -142,10 +191,9 @@ class Node(object):
                 #broadcast
                 return -1
 
-# --------------------------------Total Ordering--------------------------------------------
+
 
 #----------------------------------Main Method----------------------------------------------
-
 if __name__ == "__main__":
     print "ChatRoom Started ..."
 
@@ -155,13 +203,23 @@ if __name__ == "__main__":
     host = socket.gethostbyname(socket.gethostname())  # get host machine IP address
     node = Node(host, user_port, fail_detect_port, T)  # create node object containing both client and server; def __init__(self, host, port,port_failure,period):
 
-    # global dictionary
+    # global dictionary for machine #
     CONNECTION_LIST = {'sp17-cs425-g07-01.cs.illinois.edu': "VM01",
                        'sp17-cs425-g07-02.cs.illinois.edu': "VM02",
                        'sp17-cs425-g07-03.cs.illinois.edu': "VM03",
                        'sp17-cs425-g07-04.cs.illinois.edu': "VM04",
                        'sp17-cs425-g07-05.cs.illinois.edu': "VM05"}
 
+
+    # global queue and priority for ISIS
+    pro_p=0 # proposed priority
+    agr_p=0 #agreeed priority
+    REC_PRO_COUNTER={}
+    # flag_deliverable=False
+    queue=[]
+
+
+    #timestamp for total ordering
     timestamp={}
     timer_thread = {}
 
