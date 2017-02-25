@@ -116,7 +116,7 @@ class Node(object):
                     queue.append([p,False,data])
 
                     #send propsed priority
-                    send_pro_p = threading.Thread(target=self.client,args=("0" + ":" + str(p) + ":" + data,))
+                    send_pro_p = threading.Thread(target=self.client,args=(addr[0],addr[1],"0" + ":" + str(p) + ":" +data,))
                                                                      #self.name : 0 : prop_p : receive_name : message
                     send_pro_p.start()
 
