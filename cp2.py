@@ -15,9 +15,9 @@ class Node(object):
     def __init__(self, host, port, port_failure, period):
         self.host = host
         self.port = port
-        self.period= period
-        self.port_failure=port_failure
-        self.pro_p=0# proposed priority
+        self.period = period
+        self.port_failure = port_failure
+        self.pro_p = 0 # proposed priority
 
     def wait_input(self):  # method for take input msg
         while True:
@@ -31,11 +31,9 @@ class Node(object):
             AGR_P[cmd]=0
             self.basic_multicast(cmd)
 
-
     def basic_multicast(self,cmd):
         for key, value in CONNECTION_LIST.iteritems():
             self.client(key, self.port, cmd)  # pack the msg as a client socket to send
-
 
     def client(self, host, port, cmd):  # method for client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -49,16 +47,13 @@ class Node(object):
             return -1
 
         try:
-            s.sendall(name + " : " + cmd)  # send message to sever
+            s.sendall(name + ":" + cmd)  # send message to sever
         except:
             s.close()
             return -1
 
         s.close()
         return 0
-
-
-
 
 
     def server(self):
@@ -70,26 +65,28 @@ class Node(object):
             conn, addr = ss.accept()
             # print 'Connected by ', addr
 
-
             while True:
                 data = conn.recv(1024)
                 if not data:  # recv ending msg from client
                     break
 
                 if data.split(":")[1]=="0": #received proposed priority
+                    print "Received Proposed Priority"
                     mse=data.split(":")[-1]
                     REC_PRO_COUNTER[mse] = REC_PRO_COUNTER[mse] - 1
 
-                    if float(data.split(":")[2])> AGR_P[mse]:
+                    if float(data.split(":")[2]) > AGR_P[mse]:
                         AGR_P[mse]= float(data.split(":")[2])
 
                     if REC_PRO_COUNTER[mse]==0:
-                        broadcast_agr_p= threading.Thread(target=self.basic_multicast, args=("1"+":"+str(AGR_P[mse])+":"+data.split(":")[-2]+mse,))
+                        print "REC_PRO_COUNTER == 0"
+                        broadcast_agr_p = threading.Thread(target=self.basic_multicast, args=("1"+":"+str(AGR_P[mse])+":"+data.split(":")[-2]+":"+mse,))
                                                                                         #self.name : 1 : agr_p : receive_name : message
                         broadcast_agr_p.start()
 
 
                 elif data.split(":")[1]=="1": #received agreed priority
+                    print "Received Agreed Priority"
                     #search agreed message
                     idx=[elem[2] for elem in queue].index(data.split(":")[-2]+":"+data.split(":")[-1])
 
@@ -101,13 +98,13 @@ class Node(object):
                     # reorder
                     queue.sort(key=lambda elem:elem[0])
 
-
                     # deliver
-                    while(queue[0][1]==True):
+                    while(queue and queue[0][1]==True):
                         print (queue.pop(0)[2])
 
 
                 else: #received normal message
+                    print "Received Normal Message"
                     self.pro_p = self.pro_p + 1
 
                     name=CONNECTION_LIST[socket.gethostname()]
@@ -116,7 +113,7 @@ class Node(object):
                     queue.append([p,False,data])
 
                     #send propsed priority
-                    send_pro_p = threading.Thread(target=self.client,args=(addr[0],addr[1],"0" + ":" + str(p) + ":" +data,))
+                    send_pro_p = threading.Thread(target=self.client,args=(addr[0], self.port, "0" + ":" + str(p) + ":" +data,))
                                                                      #self.name : 0 : prop_p : receive_name : message
                     send_pro_p.start()
 
