@@ -85,7 +85,7 @@ class Node(object):
                         AGR_P[mse]= float(data.split(":")[2])
 
                     if REC_PRO_COUNTER[mse]==0:
-                        broadcast_agr_p= threading.Thread(target=self.basic_multicast, args=("1"+":"+str(AGR_P[mse])+":"+data.split(":")[-2]+mse))
+                        broadcast_agr_p= threading.Thread(target=self.basic_multicast, args=("1"+":"+str(AGR_P[mse])+":"+data.split(":")[-2]+mse,))
                                                                                         #self.name : 1 : agr_p : receive_name : message
                         broadcast_agr_p.start()
 
@@ -112,12 +112,12 @@ class Node(object):
                     self.pro_p = self.pro_p + 1
 
                     str=CONNECTION_LIST[socket.gethostname()]
-                    p=float(str[-1])/10 +self.pro_p
 
+                    p=float(str[-1])/10 +self.pro_p
                     queue.append([p,False,data])
 
-                     #send propsed priority
-                    send_pro_p = threading.Thread(target=self.client,args=("0" + ":" + str(p) + ":" + data),)
+                    #send propsed priority
+                    send_pro_p = threading.Thread(target=self.client,args=("0" + ":" + str(p) + ":" + data,))
                                                                      #self.name : 0 : prop_p : receive_name : message
                     send_pro_p.start()
 
