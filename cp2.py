@@ -27,7 +27,7 @@ class Node(object):
                 print "I am leaving"
                 thread.interrupt_main()
 
-            REC_PRO_COUNTER[cmd] =len(CONNECTION_LIST)-1
+            REC_PRO_COUNTER[cmd] =len(CONNECTION_LIST)
             AGR_P[cmd]=0
             self.basic_multicast(cmd)
 
@@ -40,7 +40,6 @@ class Node(object):
 
     def client(self, host, port, cmd):  # method for client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         name = CONNECTION_LIST[socket.gethostname()]  # find current machine name
 
         try:
@@ -66,7 +65,8 @@ class Node(object):
     def server(self):
         ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ss.bind((self.host, self.port))
-        ss.listen(5)
+        ss.listen(20)
+
         while True:
             conn, addr = ss.accept()
             # print 'Connected by ', addr
@@ -78,13 +78,14 @@ class Node(object):
                     break
 
                 if data.split(":")[1]=="0": #received proposed priority
-                    REC_PRO_COUNTER[data.split(":")[-1]] = REC_PRO_COUNTER[data.split(":")[-1]] - 1
+                    mse=data.split(":")[-1]
+                    REC_PRO_COUNTER[mse] = REC_PRO_COUNTER[mse] - 1
 
-                    if float(data.split(":")[2])> AGR_P[data.split(":")[-1]]:
-                        AGR_P[data.split(":")[-1]]= float(data.split(":")[2])
+                    if float(data.split(":")[2])> AGR_P[mse]:
+                        AGR_P[mse]= float(data.split(":")[2])
 
-                    if REC_PRO_COUNTER[data.split(":")[-1]]==0:
-                        broadcast_agr_p= threading.Thread(target=self.basic_multicast, args=("1"+":"+str(AGR_P[data.split(":")[-1]])+":"+data.split(":")[-2]+data.split(":")[-1]))
+                    if REC_PRO_COUNTER[mse]==0:
+                        broadcast_agr_p= threading.Thread(target=self.basic_multicast, args=("1"+":"+str(AGR_P[mse])+":"+data.split(":")[-2]+mse))
                                                                                         #self.name : 1 : agr_p : receive_name : message
                         broadcast_agr_p.start()
 
@@ -126,8 +127,7 @@ class Node(object):
             conn.close()  # close client socket
 
 
-#----------------------------------Failure Detection----------------------------------------
-
+#-------------------------------------Failure Detection------------------------------------------
 
     def multicast_0(self):  # method for multi-cast given msg
         #print "Multicast Hb Entered"
@@ -135,6 +135,7 @@ class Node(object):
         for key, value in CONNECTION_LIST.iteritems():
             if (socket.gethostname() != key):
                 self.client_0(key, self.port_failure)  # pack the msg as a client socket to send
+
 
     def client_0(self, host, port):  # method for client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -176,6 +177,7 @@ class Node(object):
                 if not hbaddr:  # recv ending msg from client
                     break
 
+
                 timestamp[hbaddr] = time.time()*1000
                 if hbaddr not in timer_thread:
                     timer_thread[hbaddr] = threading.Thread(target=self.Timer, args=(hbaddr,), kwargs={})
@@ -187,14 +189,18 @@ class Node(object):
         while True:
             time.sleep((self.period/1000)/5)
             if(time.time()*1000 > timestamp[host] + 2*self.period):
+
                 #CONNECTION_LIST.pop(host)
                 print(host+" failed")
+
                 #broadcast
+                #self.basic_multicast("failed")
+
                 return -1
 
 
 
-#----------------------------------Main Method----------------------------------------------
+#-----------------------------------Main Method----------------------------------------------
 if __name__ == "__main__":
     print "ChatRoom Started ..."
 
@@ -214,7 +220,7 @@ if __name__ == "__main__":
 
     # global queue and priority for ISIS
     pro_p=0 # proposed priority
-    AGR_P={} #agreeed priority
+    AGR_P={} #agreed priority
     REC_PRO_COUNTER={}
     # flag_deliverable=False
     queue=[]
