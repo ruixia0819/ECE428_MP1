@@ -96,7 +96,7 @@ class Node(object):
                     # update agreed priority
                     queue[idx][1]=True
                     queue[idx][0]=float(data.split(":")[2])
-                    pro_p=agr_p
+                    pro_p=float(data.split(":")[2])
 
                     # reorder
                     queue.sort(key=lambda elem:elem[0])
