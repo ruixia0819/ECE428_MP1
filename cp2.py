@@ -12,13 +12,13 @@ import thread
 
 
 class Node(object):
-    def __init__(self, host, port, port_failure, period):
+    def __init__(self, host, port, port_failure, period,num_node_alive):
         self.host = host
         self.port = port
         self.period = period
         self.port_failure = port_failure
         self.pro_p = 0 # proposed priority
-        self.num_node_alive= len(CONNECTION_LIST)
+        self.num_node_alive= num_node_alive
 
     def wait_input(self):  # method for take input msg
         while True:
@@ -234,7 +234,6 @@ if __name__ == "__main__":
     user_port = 9999
     fail_detect_port = 8888
     host = socket.gethostbyname(socket.gethostname())  # get host machine IP address
-    node = Node(host, user_port, fail_detect_port, T)  # create node object containing both client and server; def __init__(self, host, port,port_failure,period):
 
     # global dictionary for machine #
     CONNECTION_LIST = {'sp17-cs425-g07-01.cs.illinois.edu': "VM01",
@@ -243,6 +242,7 @@ if __name__ == "__main__":
                        'sp17-cs425-g07-04.cs.illinois.edu': "VM04",
                        'sp17-cs425-g07-05.cs.illinois.edu': "VM05"}
 
+    node = Node(host, user_port, fail_detect_port, T,len(CONNECTION_LIST))  # create node object containing both client and server; def __init__(self, host, port,port_failure,period):
 
     # global queue and priority for ISIS
 
@@ -259,6 +259,7 @@ if __name__ == "__main__":
     #timestamp for total ordering
     timestamp={}
     timer_thread = {}
+
 
     t1 = threading.Thread(target=node.wait_input)  # thread for client (send msg)
     t2 = threading.Thread(target=node.server)  # thread for server (recv msg)
