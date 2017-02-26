@@ -105,6 +105,7 @@ class Node(object):
 
 
                 elif data.split(":")[-1]=="failed" and Flag_Failed[data.split(":")[-2]]==False:# received someone failed
+                    print "Received failed"
                     failed_machine_num = data.split(":")[-2]
                     self.num_node_alive=self.num_node_alive-1
                     Flag_Failed[failed_machine_num]=True
@@ -127,7 +128,7 @@ class Node(object):
                             print failed_machine_num+"failed"
 
 
-                else: #received normal message
+                elif(data.split(":")[-1]!="failed"): #received normal message
                     print "Received Normal Message"
                     self.pro_p = self.pro_p + 1
 
