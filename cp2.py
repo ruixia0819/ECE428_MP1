@@ -18,6 +18,7 @@ class Node(object):
         self.period = period
         self.port_failure = port_failure
         self.pro_p = 0 # proposed priority
+        self.num_node_alive= len(CONNECTION_LIST)
 
     def wait_input(self):  # method for take input msg
         while True:
@@ -27,7 +28,7 @@ class Node(object):
                 print "I am leaving"
                 thread.interrupt_main()
 
-            REC_PRO_COUNTER[cmd] =len(CONNECTION_LIST)
+            REC_PRO_COUNTER[cmd] =0
             AGR_P[cmd]=0
             self.basic_multicast(cmd)
 
@@ -73,12 +74,12 @@ class Node(object):
                 if data.split(":")[1]=="0": #received proposed priority
                     print "Received Proposed Priority"
                     mse=data.split(":")[-1]
-                    REC_PRO_COUNTER[mse] = REC_PRO_COUNTER[mse] - 1
+                    REC_PRO_COUNTER[mse] = REC_PRO_COUNTER[mse] + 1
 
                     if float(data.split(":")[2]) > AGR_P[mse]:
                         AGR_P[mse]= float(data.split(":")[2])
 
-                    if REC_PRO_COUNTER[mse]==0:
+                    if REC_PRO_COUNTER[mse]==self.num_node_alive:
                         print "REC_PRO_COUNTER == 0"
                         broadcast_agr_p = threading.Thread(target=self.basic_multicast, args=("1"+":"+str(AGR_P[mse])+":"+data.split(":")[-2]+":"+mse,))
                                                                                         #self.name : 1 : agr_p : receive_name : message
@@ -101,6 +102,34 @@ class Node(object):
                     # deliver
                     while(queue and queue[0][1]==True):
                         print (queue.pop(0)[2])
+
+
+                elif data.split(":")[-1]=="failed" and Flag_Failed(data.split(":")[-2])==False:
+                    failed_machine_num = data.split(":")[-2]
+                    self.num_node_alive=self.num_node_alive-1
+                    Flag_Failed[failed_machine_num]=True
+
+
+                    failed_idx =[i for i,elem in enumerate(queue) if elem[-1].split(":")[0]==failed_machine_num]
+
+                    if not failed_idx:
+                        print failed_machine_num+"failed"
+
+                    else:
+                        for i in failed_idx:
+                            if queue[failed_idx[i]][1]==False:
+                                queue.pop(i)
+                                failed_idx.remove(i)
+                        if failed_idx:
+                            queue.append([queue[failed_idx[-1]][0]+0.1,True, failed_machine_num+"failed"])
+                            queue.sort(key=lambda elem: elem[0])
+                        else:
+                            print failed_machine_num+"failed"
+
+
+
+
+
 
 
                 else: #received normal message
@@ -162,7 +191,6 @@ class Node(object):
                 self.multicast_0()
 
     def detector(self): # receive, check, Multicast Failure
-
         ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ss.bind((self.host, self.port_failure))
         ss.listen(10)
@@ -187,10 +215,12 @@ class Node(object):
             if(time.time()*1000 > timestamp[host] + 2*self.period):
 
                 #CONNECTION_LIST.pop(host)
-                print(host+" failed")
+                #print(host+" failed")
 
                 #broadcast
-                #self.basic_multicast("failed")
+
+                self.basic_multicast(CONNECTION_LIST[host]+":"+" failed")
+
 
                 return -1
 
@@ -221,7 +251,11 @@ if __name__ == "__main__":
     # flag_deliverable=False
     queue=[]
 
-
+    Flag_Failed ={"VM01": False,
+                  "VM02": False,
+                  "VM03": False,
+                  "VM04": False,
+                  "VM05": False}
     #timestamp for total ordering
     timestamp={}
     timer_thread = {}
