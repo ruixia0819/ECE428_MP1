@@ -104,7 +104,7 @@ class Node(object):
                         print (queue.pop(0)[2])
 
 
-                elif data.split(":")[-1]=="failed" and Flag_Failed(data.split(":")[-2])==False:
+                elif data.split(":")[-1]=="failed" and Flag_Failed(data.split(":")[-2])==False:# received someone failed
                     failed_machine_num = data.split(":")[-2]
                     self.num_node_alive=self.num_node_alive-1
                     Flag_Failed[failed_machine_num]=True
@@ -125,11 +125,6 @@ class Node(object):
                             queue.sort(key=lambda elem: elem[0])
                         else:
                             print failed_machine_num+"failed"
-
-
-
-
-
 
 
                 else: #received normal message
@@ -219,7 +214,7 @@ class Node(object):
 
                 #broadcast
 
-                self.basic_multicast(CONNECTION_LIST[host]+":"+" failed")
+                self.basic_multicast(CONNECTION_LIST[host]+":"+"failed")
 
 
                 return -1
