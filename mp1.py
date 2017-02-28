@@ -13,12 +13,28 @@ import thread
 #----------------------Process Node Containing ISIS Total Ordering and Heartbeat Failure Detectoin---------------
 class Node(object):
     def __init__(self, host, port, port_failure, period, num_node_alive):
+        ###### network parameters ####################################
         self.host = host
         self.port = port
-        self.period = period
         self.port_failure = port_failure
-        self.pro_p = 0 # proposed priority
+        ######## ISIS Total Ordering parameters ###############################
+        self.pro_p = 0  # proposed priority
         self.num_node_alive = num_node_alive
+        self.AGR_P = {}  # Agreed priority
+        self.REC_PRO_COUNTER = {}  # Counter for received proposed priority
+        self.Queue = []  # ISIS Priority Queue
+        ######## Heartbeat Failure Detection paramters ########################
+        self.period = period
+        self.Flag_Failed = {"VM01": False,
+                           "VM02": False,
+                           "VM03": False,
+                           "VM04": False,
+                           "VM05": False,
+                           "VM06": False,
+                           "VM07": False,
+                           "VM08": False}
+        self.timestamp = {}
+        self.timer_thread = {}
 
     def wait_input(self):  # method for take input msg
         while True:
@@ -28,9 +44,9 @@ class Node(object):
                 print "I am leaving"
                 thread.interrupt_main()
 
-            # parameters for ISIS total ordering
-            REC_PRO_COUNTER[cmd] = 0
-            AGR_P[cmd] = 0
+            # initialization for ISIS total ordering
+            self.REC_PRO_COUNTER[cmd] = 0
+            self.AGR_P[cmd] = 0
             self.basic_multicast(cmd)
 
     def basic_multicast(self, cmd): # method for multicast msg
@@ -79,45 +95,50 @@ class Node(object):
     def ISIS_Total_Ordering(self, data, addr):
 
         if data.split(":")[1] == "0":  # received proposed priority
-            print "Received Proposed Priority"
+            #if __debug__:
+            #    print "Received Proposed Priority"
+
             mse = data.split(":")[-1]
-            REC_PRO_COUNTER[mse] = REC_PRO_COUNTER[mse] + 1
+            self.REC_PRO_COUNTER[mse] = self.REC_PRO_COUNTER[mse] + 1
 
-            if float(data.split(":")[2]) > AGR_P[mse]: # record the maximum of proposed priority
-                AGR_P[mse] = float(data.split(":")[2])
+            if float(data.split(":")[2]) > self.AGR_P[mse]: # record the maximum of proposed priority
+                self.AGR_P[mse] = float(data.split(":")[2])
 
-            if REC_PRO_COUNTER[mse] == self.num_node_alive: # all proposed priorities received from alive nodes
-                print "REC_PRO_COUNTER Done"
+            if self.REC_PRO_COUNTER[mse] == self.num_node_alive: # all proposed priorities received from alive nodes
+                #if __debug__:
+                #    print "REC_PRO_COUNTER Done"
                 # multicast agreed priority with the message by a child thread
-                broadcast_agr_p = threading.Thread(target=self.basic_multicast,
-                                                   args=("1" + ":" + str(AGR_P[mse]) + ":" + data.split(":")[-2] + ":" + mse,))
-                                                   # self.name : 1 : agr_p : receive_name : message
-                broadcast_agr_p.start()
+                broadcast_AGR_P = threading.Thread(target=self.basic_multicast,
+                                                   args=("1" + ":" + str(self.AGR_P[mse]) + ":" + data.split(":")[-2] + ":" + mse,))
+                                                   # self.name : 1 : self.AGR_P : receive_name : message
+                broadcast_AGR_P.start()
 
         elif data.split(":")[1] == "1":  # received agreed priority
-            print "Received Agreed Priority"
-            # search index of agreed message in the priority queue
-            idx = [elem[2] for elem in queue].index(data.split(":")[-2] + ":" + data.split(":")[-1])
+            #if __debug__:
+            #   print "Received Agreed Priority"
+            # search index of agreed message in the priority self.Queue
+            idx = [elem[2] for elem in self.Queue].index(data.split(":")[-2] + ":" + data.split(":")[-1])
 
             # mark it deliverable and update agreed priority
-            queue[idx][1] = True
-            queue[idx][0] = float(data.split(":")[2])
+            self.Queue[idx][1] = True
+            self.Queue[idx][0] = float(data.split(":")[2])
             self.pro_p = float(data.split(":")[2])
 
-            # reorder priority queue
-            queue.sort(key=lambda elem: elem[0])
+            # reorder priority self.Queue
+            self.Queue.sort(key=lambda elem: elem[0])
 
-            # deliver any deliverable at front of the queue
-            while (queue and queue[0][1] == True):
-                print (queue.pop(0)[2])
+            # deliver any deliverable at front of the self.Queue
+            while (self.Queue and self.Queue[0][1] == True):
+                print (self.Queue.pop(0)[2])
 
-        elif data.split(":")[-1] == "failed" and Flag_Failed[data.split(":")[-2]] == False:  # received someone failed
-            print "Received failed"
+        elif data.split(":")[-1] == "failed" and self.Flag_Failed[data.split(":")[-2]] == False:  # received someone failed
+            #if __debug__:
+            #   print "Received failed"
             failed_machine_num = data.split(":")[-2]
             self.num_node_alive = self.num_node_alive - 1
-            Flag_Failed[failed_machine_num] = True
+            self.Flag_Failed[failed_machine_num] = True
             # search pending message from failed node
-            failed_idx = [i for i, elem in enumerate(queue) if elem[-1].split(":")[0] == failed_machine_num]
+            failed_idx = [i for i, elem in enumerate(self.Queue) if elem[-1].split(":")[0] == failed_machine_num]
 
             if not failed_idx: # if no pending message from failed node
                 print failed_machine_num + "failed"
@@ -125,25 +146,26 @@ class Node(object):
             else: # has pending message
 
                 for i in failed_idx: # kick out any non-agreed messages
-                    if queue[failed_idx[i]][1] == False:
-                        queue.pop(i)
+                    if self.Queue[failed_idx[i]][1] == False:
+                        self.Queue.pop(i)
                         failed_idx.remove(i)
 
                 if failed_idx: # has agreed pending message
-                    queue.append([queue[failed_idx[-1]][0] + 0.1, True, failed_machine_num + "failed"])
-                    queue.sort(key=lambda elem: elem[0]) # insert failed notification after the agreed one
+                    self.Queue.append([self.Queue[failed_idx[-1]][0] + 0.1, True, failed_machine_num + "failed"])
+                    self.Queue.sort(key=lambda elem: elem[0]) # insert failed notification after the agreed one
                 else:
                     print failed_machine_num + "failed"
 
         elif (data.split(":")[-1] != "failed"):  # received normal message
-            print "Received Normal Message"
+            #if __debug__:
+            #    print "Received Normal Message"
             # increment proposed number
             self.pro_p = self.pro_p + 1
             # search pid
             name = CONNECTION_LIST[socket.gethostname()]
             # create proposed priority.pid
             p = float(name[-1]) / 10 + self.pro_p
-            queue.append([p, False, data])
+            self.Queue.append([p, False, data])
             # send proposed priority back to sender by a child thread
             send_pro_p = threading.Thread(target=self.client,
                                           args=(addr[0], self.port, "0" + ":" + str(p) + ":" + data,))
@@ -195,17 +217,17 @@ class Node(object):
                 if not hbaddr:  # recv ending msg from client
                     break
 
-                timestamp[hbaddr] = time.time()*1000
-                if hbaddr not in timer_thread:
-                    timer_thread[hbaddr] = threading.Thread(target=self.Timer, args=(hbaddr,), kwargs={})
-                    timer_thread[hbaddr].start()
+                self.timestamp[hbaddr] = time.time()*1000
+                if hbaddr not in self.timer_thread:
+                    self.timer_thread[hbaddr] = threading.Thread(target=self.Timer, args=(hbaddr,), kwargs={})
+                    self.timer_thread[hbaddr].start()
 
             conn.close()  # close client socket
 
     def Timer(self, host):
         while True:
             time.sleep((self.period/1000)/3)
-            if(time.time()*1000 > timestamp[host] + 2*self.period): # T+MaxOneWayDelay
+            if(time.time()*1000 > self.timestamp[host] + 2*self.period): # T+MaxOneWayDelay
                 #broadcast
                 self.basic_multicast(CONNECTION_LIST[host]+":"+"failed")
                 return -1
@@ -222,25 +244,6 @@ if __name__ == "__main__":
                        'sp17-cs425-g07-06.cs.illinois.edu': "VM06",
                        'sp17-cs425-g07-07.cs.illinois.edu': "VM07",
                        'sp17-cs425-g07-08.cs.illinois.edu': "VM08"}
-
-    ######## global queue and priority for ISIS ###############################
-    AGR_P = {}  # Agreed priority
-    REC_PRO_COUNTER = {}  # Counter for received proposed priority
-    queue = []  # ISIS Priority Queue
-
-    ######## Flag for detected machine failure ###############################
-    Flag_Failed = {"VM01": False,
-                   "VM02": False,
-                   "VM03": False,
-                   "VM04": False,
-                   "VM05": False,
-                   "VM06": False,
-                   "VM07": False,
-                   "VM08": False}
-
-    ######### timestamp for total ordering ###############################
-    timestamp = {}
-    timer_thread = {}
 
     ########################## main code ######################################
     T = 4000 # ms, period
