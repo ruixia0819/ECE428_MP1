@@ -242,6 +242,7 @@ if __name__ == "__main__":
     timestamp = {}
     timer_thread = {}
 
+
     ########################## main code ######################################
     T = 4000 # ms, period
     user_port = 9999 # port for message input
